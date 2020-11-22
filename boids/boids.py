@@ -44,7 +44,7 @@ class Object:
 
 
 class Boid:
-	def __init__(self, x, y, image, rot=0, dist=200, scale=48):
+	def __init__(self, x, y, image, rot=0, dist=200, scale=32):
 		self.x = x
 		self.y = y
 		self.scale = scale
@@ -68,6 +68,11 @@ class Boid:
 	
 	def withinrange(self, other):
 		return other.xc + self.dist > self.xc > other.xc - self.dist and other.yc + self.dist > self.yc > other.yc - self.dist
+		#return True
+	
+	def tooclose(self, other):
+		self.dist2 = self.dist/4
+		return other.xc + self.dist2 > self.xc > other.xc - self.dist2 and other.yc + self.dist2 > self.yc > other.yc - self.dist2
 		#return True
 	
 	def getavgpos(self):
@@ -115,24 +120,23 @@ class Boid:
 			
 			
 	def separate(self):
-		ax, ay = self.getavgpos() # average x and y
-		pygame.draw.rect(screen, (0, 0, 255), (ax, ay, 5, 5)) # just draws a rectangle at where the average position is
-		relx = ax - self.x
-		rely = ay - self.y
+		for b in boids:
+			if b.tooclose(self):
+				x, y = getXYFromVector(self.rot, 10)
+				ox, oy = getXYFromVector(b.rot, 10)
+				rx = x - ox
+				ry = y - oy
+				
+				if rx > 0 and ry > 0:
+					self.rot += 3
+				elif rx > 0 and ry < 0:
+					self.rot -= 3
+				elif rx < 0 and ry < 0:
+					self.rot -= 3
+				else:
+					self.rot += 3
+				
 		
-		if -50 < relx < 50:
-			self.rot += 3
-		
-		if -50 < rely < 50:
-			self.rot += 3
-		
-		rota, l = getVectorfromXY(relx, rely)
-		print(rota)
-		rotc = ((rota - self.rot) * 0.3) # change in rotation needed: change 0.5 to other values to increase/decrease sensitivity
-		if abs(rotc) >= 30: # threshold for override of rotation to stop spazzing
-			self.rot += (abs(rotc) / rotc) * 30
-		else:
-			self.rot += rotc
 	
 	
 	def align(self):
@@ -151,7 +155,7 @@ class Boid:
 		# if self.yc < 0:
 			# self.yc = 1080
 		
-		nx, ny = getXYFromVector(self.rot, randint(3, 7))
+		nx, ny = getXYFromVector(self.rot, randint(5, 10))
 		self.x += nx
 		self.y += ny
 	
@@ -178,7 +182,7 @@ backg = Object(0, 0, width, height, (0, 0, 0))
 boids = []
 
 # add boids
-for i in range(200):
+for i in range(150):
 	boids.append(Boid(randint(0, width), randint(0, height), pygame.image.load("boid.png"), 150))
 playerquit = False
 main = True
