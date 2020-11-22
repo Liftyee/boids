@@ -42,10 +42,10 @@ class Object:
 
 
 class Boid:
-	def __init__(self, x, y, image, rot=0):
+	def __init__(self, x, y, image, rot=0, dist=200):
 		self.x = x
 		self.y = y
-
+		self.dist = dist
 		self.image = image
 		self.image = pygame.transform.scale(self.image, (64, 64))
 		self.rot = rot
@@ -61,16 +61,16 @@ class Boid:
 
 		# self.rot += 10
 	
-	def withinrange(self, other, dist):
-		return self.x > other.x - dist and self.x < other.x + dist and self.y > other.y - dist and self.y < other.y + dist
+	def withinrange(self, other):
+		return other.x + self.dist > self.x > other.x - self.dist and other.y + self.dist > self.y > other.y - self.dist
 		#return True
 	
-	def getavgpos(self, dist):
+	def getavgpos(self):
 		avgx = self.x
 		avgy = self.y
-		bcount = 0
+		bcount = 1
 		for b in boids:
-			if b.withinrange(self, dist):
+			if b.withinrange(self):
 				avgx += b.x
 				avgy += b.y
 				bcount += 1
@@ -79,8 +79,19 @@ class Boid:
 		avgy = avgy/bcount
 		return avgx, avgy
 		
-	def cohesion(self, dist):
-		ax, ay = self.getavgpos(dist) # average x and y
+	def getavgdir(self):
+		avgd = self.rot
+		bcount = 1
+		for b in boids:
+			if b.withinrange(self):
+				avgd += b.rot
+				bcount += 1
+			
+		avgd = avgd/bcount
+		return avgd
+	
+	def cohesion(self):
+		ax, ay = self.getavgpos() # average x and y
 		ax -= 32
 		ay -= 32
 		pygame.draw.rect(screen, (0, 0, 255), (ax, ay, 5, 5)) # just draws a rectangle at where the average position is
@@ -89,7 +100,7 @@ class Boid:
 		
 		rota, l = getVectorfromXY(relx, rely)
 		print(rota)
-		rotc = (rota - self.rot * 0.3) # change in rotation needed: change 0.5 to other values to increase/decrease sensitivity
+		rotc = ((rota - self.rot) * 0.3) # change in rotation needed: change 0.5 to other values to increase/decrease sensitivity
 		if abs(rotc) >= 30: # threshold for override of rotation to stop spazzing
 			self.rot += (abs(rotc) / rotc) * 30
 		else:
@@ -98,7 +109,11 @@ class Boid:
 			# self.rot -= 1
 		# elif relx > 0:
 			# self.rot += 1
-		
+	
+	def align(self):
+		arot = self.getavgdir()
+		self.rot += (arot - self.rot) * 0.5
+	
 	def move(self):
 		self.xc = self.x + 32
 		self.yc = self.y + 32
@@ -116,9 +131,10 @@ class Boid:
 		self.y += ny
 	
 	def update(self):
-		self.cohesion(100)
+		self.cohesion()
 		self.draw()
 		self.move()
+		self.align()
 
 def getXYFromVector(angle, length):
 	xc = length * math.sin(math.radians(angle))
@@ -147,7 +163,7 @@ while not playerquit:
 		i.update()
 		i.draw()
 	
-	center.x, center.y = boids[0].getavgpos(50)
+	center.x, center.y = boids[0].getavgpos()
 	#center.draw()
 	
 	for event in pygame.event.get():
@@ -156,7 +172,6 @@ while not playerquit:
 			playerquit = True
 
 	pygame.display.update()
-	clock.tick(15)
+	clock.tick(30)
 pygame.quit()
-
-# git test
+	
