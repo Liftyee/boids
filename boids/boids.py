@@ -54,6 +54,9 @@ class Boid:
 		self.image = image
 		self.image = pygame.transform.scale(self.image, (scale, scale))
 		self.rot = rot
+		self.moveAmount = 5
+		self.rotsLeft = 0
+		self.rotAmount = 0
 		
 	def draw(self):
 		
@@ -71,7 +74,7 @@ class Boid:
 		#return True
 	
 	def tooclose(self, other):
-		self.dist2 = self.dist/4
+		self.dist2 = self.dist/2
 		return other.xc + self.dist2 > self.xc > other.xc - self.dist2 and other.yc + self.dist2 > self.yc > other.yc - self.dist2
 		#return True
 	
@@ -102,7 +105,7 @@ class Boid:
 	
 	def cohesion(self):
 		ax, ay = self.getavgpos() # average x and y
-		pygame.draw.rect(screen, (0, 0, 255), (ax, ay, 5, 5)) # just draws a rectangle at where the average position is
+		pygame.draw.rect(screen, (0, 0, 255), (ax%width, ay%height, 5, 5)) # just draws a rectangle at where the average position is
 		relx = ax - self.x
 		rely = ay - self.y
 		
@@ -113,10 +116,6 @@ class Boid:
 			self.rot += (abs(rotc) / rotc) * 30
 		else:
 			self.rot += rotc
-		# if relx < 0:
-			# self.rot -= 1
-		# elif relx > 0:
-			# self.rot += 1
 			
 			
 	def separate(self):
@@ -146,18 +145,11 @@ class Boid:
 	def move(self):
 		self.xc = self.x + self.scale/2
 		self.yc = self.y + self.scale/2
-		# if self.xc > 1920:
-			# self.xc = 0
-		# if self.yc > 1080:
-			# self.yc = 0
-		# if self.xc < 0:
-			# self.xc = 1920
-		# if self.yc < 0:
-			# self.yc = 1080
 		
 		nx, ny = getXYFromVector(self.rot, randint(5, 10))
 		self.x += nx
 		self.y += ny
+		
 	
 	def update(self):
 		self.cohesion()
