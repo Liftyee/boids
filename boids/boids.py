@@ -22,7 +22,7 @@ import math
 from random import randint
 from pygame.locals import *
 width = 1920
-height = 1080
+height = 1000
 screen = pygame.display.set_mode((width, height))
 pygame.init()
 clock = pygame.time.Clock()
@@ -153,7 +153,7 @@ boids = []
 
 # add boids
 for i in range(25):
-	boids.append(Boid(randint(0, width), randint(0, height), pygame.image.load("boid.png")))
+	boids.append(Boid(randint(0, width), randint(0, height), pygame.image.load("boid.png"), 150))
 playerquit = False
 main = True
 
@@ -161,7 +161,6 @@ while not playerquit:
 	backg.draw()
 	for i in boids:
 		i.update()
-		i.draw()
 	
 	center.x, center.y = boids[0].getavgpos()
 	#center.draw()
