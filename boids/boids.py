@@ -31,6 +31,8 @@ class Object:
 	def __init__(self, x, y, width=100, height=100, color=(0, 0, 255)):
 		self.x = x
 		self.y = y
+		self.xc = x + 24
+		self.yc = y + 24
 		self.color = color
 		self.width = width
 		self.height = height
@@ -42,12 +44,15 @@ class Object:
 
 
 class Boid:
-	def __init__(self, x, y, image, rot=0, dist=200):
+	def __init__(self, x, y, image, rot=0, dist=200, scale=48):
 		self.x = x
 		self.y = y
+		self.scale = scale
+		self.xc = x + scale/2
+		self.yc = y + scale/2
 		self.dist = dist
 		self.image = image
-		self.image = pygame.transform.scale(self.image, (64, 64))
+		self.image = pygame.transform.scale(self.image, (scale, scale))
 		self.rot = rot
 		
 	def draw(self):
@@ -62,17 +67,17 @@ class Boid:
 		# self.rot += 10
 	
 	def withinrange(self, other):
-		return other.x + self.dist > self.x > other.x - self.dist and other.y + self.dist > self.y > other.y - self.dist
+		return other.xc + self.dist > self.xc > other.xc - self.dist and other.yc + self.dist > self.yc > other.yc - self.dist
 		#return True
 	
 	def getavgpos(self):
-		avgx = self.x
-		avgy = self.y
+		avgx = self.xc
+		avgy = self.yc
 		bcount = 1
 		for b in boids:
 			if b.withinrange(self):
-				avgx += b.x
-				avgy += b.y
+				avgx += b.xc
+				avgy += b.yc
 				bcount += 1
 			
 		avgx = avgx/bcount
@@ -92,8 +97,6 @@ class Boid:
 	
 	def cohesion(self):
 		ax, ay = self.getavgpos() # average x and y
-		ax -= 32
-		ay -= 32
 		pygame.draw.rect(screen, (0, 0, 255), (ax, ay, 5, 5)) # just draws a rectangle at where the average position is
 		relx = ax - self.x
 		rely = ay - self.y
@@ -109,14 +112,36 @@ class Boid:
 			# self.rot -= 1
 		# elif relx > 0:
 			# self.rot += 1
+			
+			
+	def separate(self):
+		ax, ay = self.getavgpos() # average x and y
+		pygame.draw.rect(screen, (0, 0, 255), (ax, ay, 5, 5)) # just draws a rectangle at where the average position is
+		relx = ax - self.x
+		rely = ay - self.y
+		
+		if -50 < relx < 50:
+			self.rot += 3
+		
+		if -50 < rely < 50:
+			self.rot += 3
+		
+		rota, l = getVectorfromXY(relx, rely)
+		print(rota)
+		rotc = ((rota - self.rot) * 0.3) # change in rotation needed: change 0.5 to other values to increase/decrease sensitivity
+		if abs(rotc) >= 30: # threshold for override of rotation to stop spazzing
+			self.rot += (abs(rotc) / rotc) * 30
+		else:
+			self.rot += rotc
+	
 	
 	def align(self):
 		arot = self.getavgdir()
 		self.rot += (arot - self.rot) * 0.5
 	
 	def move(self):
-		self.xc = self.x + 32
-		self.yc = self.y + 32
+		self.xc = self.x + self.scale/2
+		self.yc = self.y + self.scale/2
 		# if self.xc > 1920:
 			# self.xc = 0
 		# if self.yc > 1080:
@@ -126,7 +151,7 @@ class Boid:
 		# if self.yc < 0:
 			# self.yc = 1080
 		
-		nx, ny = getXYFromVector(self.rot, 1)
+		nx, ny = getXYFromVector(self.rot, randint(3, 7))
 		self.x += nx
 		self.y += ny
 	
@@ -135,6 +160,7 @@ class Boid:
 		self.draw()
 		self.move()
 		self.align()
+		self.separate()
 
 def getXYFromVector(angle, length):
 	xc = length * math.sin(math.radians(angle))
@@ -152,7 +178,7 @@ backg = Object(0, 0, width, height, (0, 0, 0))
 boids = []
 
 # add boids
-for i in range(25):
+for i in range(200):
 	boids.append(Boid(randint(0, width), randint(0, height), pygame.image.load("boid.png"), 150))
 playerquit = False
 main = True
