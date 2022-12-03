@@ -74,7 +74,7 @@ class Boid:
 				avgx += b.x
 				avgy += b.y
 				bcount += 1
-			
+
 		avgx = avgx/bcount
 		avgy = avgy/bcount
 		print(avgx, avgy)
@@ -117,10 +117,12 @@ def getVectorfromXY(xc, yc):
 
 center = Object(0, 0, 5, 5, (0, 0, 255))
 backg = Object(0, 0, 1920, 1080, (0, 0, 0))
-boids = []
 boid = Boid(100, 100, pygame.image.load("boid.png"))
 
-boids.append(Boid(randint(500, 1000), randint(500, 1000), pygame.image.load("boid.png")))
+boids = [
+	Boid(randint(500, 1000), randint(500, 1000), pygame.image.load("boid.png"))
+]
+
 playerquit = False
 main = True
 while not playerquit:
@@ -131,7 +133,7 @@ while not playerquit:
 	for i in boids:
 		i.update()
 		i.draw()
-	
+
 	center.x, center.y = boids[0].getavgpos(500)
 	center.draw()
 	#print(pygame.mouse.get_pos())

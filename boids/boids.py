@@ -98,7 +98,7 @@ class Boid:
 				avgx += b.xc
 				avgy += b.yc
 				bcount += 1
-			
+
 		avgx = avgx/bcount
 		avgy = avgy/bcount
 		if bcount <= 2:
@@ -112,19 +112,15 @@ class Boid:
 			if b.withinrange(self):
 				avgd += b.rot
 				bcount += 1
-			
-		avgd = avgd/bcount
-		return avgd
+
+		return avgd/bcount
 	
 	def cohesion(self):
 		ax, ay = self.getavgpos() # average x and y
-		if self.alone:
-			pygame.draw.rect(screen, (0, 0, 255), (ax%width, ay%height, 5, 5))
-		else:
-			pygame.draw.rect(screen, (0, 0, 255), (ax%width, ay%height, 5, 5)) # just draws a rectangle at where the average position is
+		pygame.draw.rect(screen, (0, 0, 255), (ax%width, ay%height, 5, 5))
 		relx = ax - self.x
 		rely = ay - self.y
-		
+
 		rota, l = getVectorfromXY(relx, rely)
 		print(rota)
 		rotc = ((rota - self.rot) * 0.3) # change in rotation needed: change 0.5 to other values to increase/decrease sensitivity
@@ -144,15 +140,11 @@ class Boid:
 				ox, oy = getXYFromVector(b.rot, 10)
 				rx = x - ox
 				ry = y - oy
-				
-				if rx > 0 and ry > 0:
+
+				if rx > 0 and ry > 0 or (rx <= 0 or ry >= 0) and (rx >= 0 or ry >= 0):
 					self.rot += tcs
-				elif rx > 0 and ry < 0:
-					self.rot -= tcs
-				elif rx < 0 and ry < 0:
-					self.rot -= tcs
 				else:
-					self.rot += tcs
+					self.rot -= tcs
 				
 		
 	
@@ -206,11 +198,17 @@ def getVectorfromXY(xc, yc):
 center = Object(0, 0, 5, 5, (0, 0, 255))
 backg = Object(0, 0, width, height, (0, 0, 0))
 
-boids = []
+boids = [
+	Boid(
+		randint(0, width),
+		randint(0, height),
+		pygame.image.load("boid.png"),
+		150,
+	)
+	for _ in range(100)
+]
 
-# add boids
-for i in range(100):
-	boids.append(Boid(randint(0, width), randint(0, height), pygame.image.load("boid.png"), 150))
+
 playerquit = False
 main = True
 
@@ -218,10 +216,10 @@ while not playerquit:
 	backg.draw()
 	for i in boids:
 		i.update()
-	
+
 	center.x, center.y = boids[0].getavgpos()
 	#center.draw()
-	
+
 	for event in pygame.event.get():
 		if event.type == QUIT:
 			main = False
