@@ -21,7 +21,7 @@ import keyboard
 import math
 from random import randint
 from pygame.locals import *
-width = 1920
+width = 1000
 height = 1000
 screen = pygame.display.set_mode((width, height))
 pygame.init()
@@ -42,12 +42,14 @@ class Object:
 		pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
 			
 # a bunch of constants
-tcs = 5 # amount it turns when it is too close to another boid
+tcs = 7 # amount it turns when it is too close to another boid
 dradius = 150 # radius in which it detects another boid
-dspeed = 10 # default speed before increases
-closeinc = 3 # speed increase when it is too close
-turninc = 3 # speed increase when it turns
-turnthr = 10 # amount turn needed to trigger speed increase
+dspeed = 1 # default speed before increases
+closeinc = 2 # speed increase when it is too close
+turninc = 2 # speed increase when it turns
+turnthr = 2 # amount turn needed to trigger speed increase
+rotsens = 0.2
+rotcorrweight = 0.3
 
 class Boid:
 	def __init__(self, x, y, image, rot=0, dist=200, scale=32):
@@ -81,9 +83,9 @@ class Boid:
 		#return True
 	
 	def tooclose(self, other):
-		self.dist2 = self.dist/2 # change this line to change clumping distance
+		self.dist2 = self.dist # change this line to change clumping distance
 		self.moveAmount += closeinc
-		return other.xc + self.dist2 > self.xc > other.xc - self.dist2 and other.yc + self.dist2 > self.yc > other.yc - self.dist2
+		return other.xc + self.dist2 > self.xc > other.xc - self.dist2 and other.yc + self.dist2 > self.yc > other.yc - self.dist2 # compare the centers, if the centers are within rectangular box decided by dist2 then too close
 		#return True
 	
 	def getavgpos(self):
@@ -126,8 +128,8 @@ class Boid:
 		rely = ay - self.y
 		
 		rota, l = getVectorfromXY(relx, rely)
-		print(rota)
-		rotc = ((rota - self.rot) * 0.3) # change in rotation needed: change 0.5 to other values to increase/decrease sensitivity
+		# print(rota)
+		rotc = ((rota - self.rot) * rotsens) # change in rotation needed: change 0.5 to other values to increase/decrease sensitivity
 		if abs(rotc) >= 948934: # threshold for override of rotation to stop spazzing
 			self.rot += (abs(rotc) / rotc) * 30
 		elif abs(rotc) >= turnthr:
@@ -159,7 +161,7 @@ class Boid:
 	
 	def align(self):
 		arot = self.getavgdir()
-		self.rot += (arot - self.rot) * 0.5
+		self.rot += (arot - self.rot) * rotcorrweight
 	
 	def move(self):
 		self.xc = self.x + self.scale/2
@@ -175,7 +177,7 @@ class Boid:
 		if self.alone and randint(1, 10) == 1:
 			self.alone = True
 			self.rotsLeft = randint(5, 15)
-			self.rotAmount = randint(-10, 10)
+			self.rotAmount = randint(-2, 2)
 			
 		if self.rotsLeft >= 0:
 			self.rotsLeft -= 1
@@ -209,7 +211,7 @@ backg = Object(0, 0, width, height, (0, 0, 0))
 boids = []
 
 # add boids
-for i in range(100):
+for i in range(5):
 	boids.append(Boid(randint(0, width), randint(0, height), pygame.image.load("boid.png"), 150))
 playerquit = False
 main = True
